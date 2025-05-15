@@ -1,9 +1,8 @@
-package main
+package client
 
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -15,38 +14,28 @@ import (
 	"github.com/valcinei/jiboia-tunnel/shared"
 )
 
-type TunnelMessage = shared.TunnelMessage
-
-func randName() string {
-	letters := []rune("abcdefghijklmnopqrstuvwxyz0123456789")
-	b := make([]rune, 8)
-	for i := range b {
-		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
-		time.Sleep(time.Nanosecond)
-		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
-	}
-	return string(b)
+type Client struct {
+	localURL string
+	relayURL string
+	name     string
 }
 
-func main() {
-	local := flag.String("local", "http://localhost:3000", "URL local")
-	relay := flag.String("relay", "ws://localhost:80/ws", "URL do relay")
-	name := flag.String("name", "", "Nome do túnel (subdomínio)")
-	flag.Parse()
-
-	if *name == "" {
-		*name = randName()
-		fmt.Println("Nome gerado:", *name)
+func NewClient(localURL, relayURL, name string) *Client {
+	return &Client{
+		localURL: localURL,
+		relayURL: relayURL,
+		name:     name,
 	}
+}
 
-	wsURL := fmt.Sprintf("%s?id=%s", *relay, *name)
-	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+func (c *Client) Start() error {
+	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("%s?id=%s", c.relayURL, c.name), nil)
 	if err != nil {
-		log.Fatal("Falha ao conectar ao relay:", err)
+		return fmt.Errorf("falha ao conectar ao relay: %w", err)
 	}
 	defer conn.Close()
 
-	fmt.Printf("Túnel disponível em: http://%s.jiboia.local:80\n", *name)
+	fmt.Printf("Túnel disponível em: http://%s.jiboia.local:80\n", c.name)
 
 	for {
 		_, msg, err := conn.ReadMessage()
@@ -55,13 +44,13 @@ func main() {
 			break
 		}
 
-		var tm TunnelMessage
+		var tm shared.TunnelMessage
 		if err := json.Unmarshal(msg, &tm); err != nil {
 			log.Println("Erro ao decodificar mensagem:", err)
 			continue
 		}
 
-		req, err := http.NewRequest(tm.Method, *local+tm.Path, bytes.NewReader(tm.Body))
+		req, err := http.NewRequest(tm.Method, c.localURL+tm.Path, bytes.NewReader(tm.Body))
 		if err != nil {
 			log.Println("Erro ao criar requisição local:", err)
 			continue
@@ -109,4 +98,17 @@ func main() {
 			log.Printf("Resposta enviada: %s %s → %d", tm.Method, tm.Path, response.StatusCode)
 		}
 	}
+
+	return nil
 }
+
+func GenerateRandomName() string {
+	letters := []rune("abcdefghijklmnopqrstuvwxyz0123456789")
+	b := make([]rune, 8)
+	for i := range b {
+		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
+		time.Sleep(time.Nanosecond)
+		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
+	}
+	return string(b)
+} 
