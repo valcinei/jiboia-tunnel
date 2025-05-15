@@ -46,25 +46,25 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("erro upgrade:", err)
+		log.Println("upgrade error:", err)
 		return
 	}
-	log.Printf("Novo cliente: %s", id)
+	log.Printf("New client: %s", id)
 	s.clients.Store(id, &ClientConn{Conn: conn})
 	defer func() {
 		s.clients.Delete(id)
 		conn.Close()
-		log.Printf("Cliente %s desconectado", id)
+		log.Printf("Client %s disconnected", id)
 	}()
 	select {}
 }
 
 func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Requisição recebida do navegador: Host=%s, URL=%s", r.Host, r.URL.String())
+	log.Printf("Request received from browser: Host=%s, URL=%s", r.Host, r.URL.String())
 	id := s.extractSubdomain(r.Host)
 	clientRaw, ok := s.clients.Load(id)
 	if !ok {
-		http.Error(w, "cliente offline", http.StatusBadGateway)
+		http.Error(w, "client offline", http.StatusBadGateway)
 		return
 	}
 	client := clientRaw.(*ClientConn)
@@ -77,12 +77,12 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 	client.Conn.WriteMessage(websocket.BinaryMessage, jsonMsg)
 	_, rawResp, err := client.Conn.ReadMessage()
 	if err != nil {
-		http.Error(w, "erro do cliente", http.StatusInternalServerError)
+		http.Error(w, "client error", http.StatusInternalServerError)
 		return
 	}
 	var tr shared.TunnelResponse
 	if err := json.Unmarshal(rawResp, &tr); err != nil {
-		http.Error(w, "resposta inválida", http.StatusInternalServerError)
+		http.Error(w, "invalid response", http.StatusInternalServerError)
 		return
 	}
 	for k, v := range tr.Headers {
@@ -98,6 +98,6 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Start(addr string) error {
 	http.HandleFunc("/ws", s.handleWebSocket)
 	http.HandleFunc("/", s.handleProxy)
-	log.Printf("Relay ouvindo em http://%s", addr)
+	log.Printf("Relay listening on http://%s", addr)
 	return http.ListenAndServe(addr, nil)
-} 
+}

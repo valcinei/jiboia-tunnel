@@ -95,7 +95,7 @@ func (c *Client) Start() error {
 		if err := conn.WriteMessage(websocket.BinaryMessage, jsonResp); err != nil {
 			log.Println("Erro ao enviar resposta ao relay:", err)
 		} else {
-			log.Printf("Resposta enviada: %s %s → %d", tm.Method, tm.Path, response.StatusCode)
+			log.Printf("Responsed: %s %s → %d", tm.Method, tm.Path, response.StatusCode)
 		}
 	}
 
@@ -111,4 +111,4 @@ func GenerateRandomName() string {
 		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
 	}
 	return string(b)
-} 
+}

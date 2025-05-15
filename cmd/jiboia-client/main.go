@@ -7,13 +7,19 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/valcinei/jiboia-tunnel/client"
+	"github.com/valcinei/jiboia-tunnel/shared"
 )
 
 func main() {
-	var local, relay, name string
+	var local, relay, name, proto, hostname, authtoken, config, region, label, logLevel string
+	var inspect bool
+
+	// Initialize the in-memory store
+	store := shared.NewInMemoryStore()
+
 	cmd := &cobra.Command{
 		Use:   "client [protocol] [port]",
-		Short: "Inicia o cliente que conecta ao relay",
+		Short: "Starts the client that connects to the relay",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			protocol := args[0]
@@ -22,16 +28,28 @@ func main() {
 
 			if name == "" {
 				name = client.GenerateRandomName()
-				fmt.Println("Nome gerado:", name)
+				fmt.Println("Generated name:", name)
 			}
+
+			// Add tunnel information to the in-memory store
+			store.AddTunnel(name, local, relay)
+
 			c := client.NewClient(local, relay, name)
 			if err := c.Start(); err != nil {
 				log.Fatal(err)
 			}
 		},
 	}
-	cmd.Flags().StringVar(&relay, "relay", "ws://localhost:80/ws", "URL do relay")
-	cmd.Flags().StringVar(&name, "name", "", "Nome do túnel (subdomínio)")
+	cmd.Flags().StringVar(&relay, "relay", "ws://localhost:80/ws", "Relay URL")
+	cmd.Flags().StringVar(&name, "name", "", "Tunnel name (subdomain)")
+	cmd.Flags().StringVar(&proto, "proto", "http", "Protocol to expose (http, tcp)")
+	cmd.Flags().StringVar(&hostname, "hostname", "", "Full custom domain (e.g., mywebsite.com)")
+	cmd.Flags().BoolVar(&inspect, "inspect", false, "Shows detailed traffic (debug mode)")
+	cmd.Flags().StringVar(&authtoken, "authtoken", "", "Authentication token with the server")
+	cmd.Flags().StringVar(&config, "config", "", "Path to external configuration file")
+	cmd.Flags().StringVar(&region, "region", "", "Relay region (e.g., us, sa-east)")
+	cmd.Flags().StringVar(&label, "label", "", "Friendly tunnel identifier (used in logs/future API)")
+	cmd.Flags().StringVar(&logLevel, "log-level", "info", "Log level (debug, info, warn, error)")
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)

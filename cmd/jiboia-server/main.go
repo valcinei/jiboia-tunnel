@@ -9,9 +9,13 @@ import (
 
 func main() {
 	var addr string
+
+	// Setup authentication routes
+	server.SetupAuthRoutes()
+
 	cmd := &cobra.Command{
 		Use:   "server",
-		Short: "Mock local HTTP server (para testes)",
+		Short: "Mock local HTTP server (for testing)",
 		Run: func(cmd *cobra.Command, args []string) {
 			mockServer := server.NewServer(addr)
 			if err := mockServer.Start(); err != nil {
@@ -19,7 +23,7 @@ func main() {
 			}
 		},
 	}
-	cmd.Flags().StringVar(&addr, "addr", ":3000", "Endereço para escutar")
+	cmd.Flags().StringVar(&addr, "addr", ":3000", "Address to listen on")
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
