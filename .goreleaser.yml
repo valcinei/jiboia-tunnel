@@ -1,0 +1,63 @@
+
+project_name: jiboia
+
+builds:
+  - id: jiboia
+    main: ./cmd/jiboia-client
+    binary: jiboia
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: jiboia-relay
+    main: ./cmd/jiboia-relay
+    binary: jiboia-relay
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: jiboia-server
+    main: ./cmd/jiboia-server
+    binary: jiboia-server
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - format: zip
+    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
+
+release:
+  github:
+    owner: valcinei
+    name: jiboia-tunnel
+  draft: false
+  prerelease: false
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: desc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"

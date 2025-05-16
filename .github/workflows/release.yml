@@ -9,22 +9,8 @@ on:
 
 jobs:
   build:
-    name: Build Binaries
+    name: Build and Release
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-          - goos: linux
-            goarch: arm64
-          - goos: windows
-            goarch: amd64
-          - goos: darwin
-            goarch: amd64
-          - goos: darwin
-            goarch: arm64
 
     steps:
       - uses: actions/checkout@v3
@@ -34,20 +20,13 @@ jobs:
         with:
           go-version: 1.21
 
-      - name: Build binaries
-        run: |
-          mkdir -p dist
-          for CMD in jiboia-client jiboia-relay jiboia-server; do
-            if [ "$CMD" = "jiboia-client" ]; then
-              BIN_NAME="jiboia"
-            else
-              BIN_NAME="$CMD"
-            fi
-            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/${BIN_NAME}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${CMD}
-          done
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
 
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
         with:
-          name: jiboia-binaries-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/*
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
