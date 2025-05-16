@@ -1,4 +1,4 @@
-# 📦 Jiboia Tunnel — Jiboia Tunnel — Structure and Usage
+# 📦 Jiboia Tunnel — Structure and Usage
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -6,84 +6,84 @@
 - [Português (Brasil)](README.pt-BR.md)
 - [Español](README.es.md)
 
-O Jiboia Tunnel é uma ferramenta de tunelamento HTTP reverso baseada em WebSocket, inspirada em soluções como `ngrok` e `inlets`. A seguir está a documentação detalhada para desenvolvedores que desejam entender e replicar o projeto com precisão.
+Jiboia Tunnel is a reverse HTTP tunneling tool based on WebSocket, inspired by solutions like `ngrok` and `inlets`. Below is the detailed documentation for developers who want to understand and replicate the project with precision.
 
 ---
 
-## 📁 Estrutura do Projeto (binários separados)
+## 📁 Project Structure (separated binaries)
 
 ```
 jiboia-tunnel/
 ├── cmd/
-│   ├── jiboia-client/main.go     # Cliente: conecta ao relay e envia tráfego local
-│   ├── jiboia-relay/main.go      # Relay: aceita WebSocket e encaminha requisições
-│   ├── jiboia-server/main.go     # Mock: servidor local de teste
+│   ├── jiboia-client/main.go     # Client: connects to the relay and sends local traffic
+│   ├── jiboia-relay/main.go      # Relay: accepts WebSocket and forwards requests
+│   ├── jiboia-server/main.go     # Mock: local test server
 ├── shared/
-│   └── message.go                # Tipos comuns: TunnelMessage, TunnelResponse
+│   └── message.go                # Common types: TunnelMessage, TunnelResponse
 ├── go.mod
 ├── go.sum
 └── README.md
 ```
 
-Cada diretório `cmd/<nome>` define um binário separado:
+Each `cmd/<name>` directory defines a separate binary:
 - `jiboia-client`
 - `jiboia-relay`
 - `jiboia-server`
 
 ---
 
-## 🚀 Comandos Disponíveis (pós-build)
+## 🚀 Available Commands (post-build)
 
-### Iniciar o relay
+### Start the relay
 ```bash
 ./jiboia-relay
 ```
-- WebSocket escutando em `/ws`
-- Requisições HTTP são roteadas para os clientes conectados
+- WebSocket listening on `/ws`
+- HTTP requests are routed to connected clients
 
 ---
 
-### Iniciar o client (usuário local)
+### Start the client (local user)
 ```bash
 ./jiboia-client http 3000
 ```
-Atalho para expor `localhost:3000` como túnel via relay padrão (`ws://localhost:80/ws`).
+Shortcut to expose `localhost:3000` via default relay (`ws://localhost:80/ws`).
 
-Expõe seu serviço local (`localhost:3000`) como:
+Your local service (`localhost:3000`) becomes:
 ```
-http://<nome-gerado>.jiboia.local
+http://<generated-name>.jiboia.local
 ```
 
-#### Com nome definido e relay remoto:
+#### With defined name and remote relay:
 ```bash
-./jiboia-client http 3000 --name meuapp --relay wss://relay.jiboia.io/ws
+./jiboia-client http 3000 --name myapp --relay wss://relay.jiboia.io/ws
 ```
 
-#### Flags adicionais disponíveis:
-| Flag             | Tipo     | Descrição                                                       |
-|------------------|----------|-----------------------------------------------------------------|
-| `--name`         | string   | Nome do túnel (subdomínio).                                     |
-| `--relay`        | string   | Endereço WebSocket do relay.                                    |
-| `--proto`        | string   | Protocolo a expor (`http`, `tcp`).                              |
-| `--hostname`     | string   | Domínio customizado completo (ex: `meusite.com`).              |
-| `--inspect`      | bool     | Mostra tráfego detalhado (modo debug).                          |
-| `--authtoken`    | string   | Token de autenticação com o servidor.                          |
-| `--config`       | string   | Caminho para arquivo de configuração externo.                   |
-| `--region`       | string   | Região do relay (ex: `us`, `sa-east`).                         |
-| `--label`        | string   | Identificador amigável do túnel (usado em logs/API futura).    |
-| `--log-level`    | string   | Nível de log (`debug`, `info`, `warn`, `error`).               |
+#### Additional available flags:
+| Flag             | Type     | Description                                                  |
+|------------------|----------|--------------------------------------------------------------|
+| `--name`         | string   | Tunnel name (subdomain).                                    |
+| `--relay`        | string   | Relay WebSocket address.                                    |
+| `--proto`        | string   | Protocol to expose (`http`, `tcp`).                         |
+| `--hostname`     | string   | Custom full domain (e.g., `mydomain.com`).                  |
+| `--inspect`      | bool     | Enable detailed traffic view (debug mode).                  |
+| `--authtoken`    | string   | Authentication token with the server.                       |
+| `--config`       | string   | Path to external config file.                               |
+| `--region`       | string   | Relay region (e.g., `us`, `sa-east`).                       |
+| `--label`        | string   | Friendly tunnel label (used in logs/API).                   |
+| `--log-level`    | string   | Logging level (`debug`, `info`, `warn`, `error`).           |
 
 ---
 
-### Iniciar servidor local de teste
+### Start local test server
 ```bash
 ./jiboia-server
 ```
-Responde com HTML simples em `http://localhost:3000`
+Simple HTML server on `http://localhost:3000`
 
 ---
 
-## 🧪 Testando localmente com `go run`
+## 🧪 Local Testing with `go run`
 ```bash
 # Terminal 1
 sudo go run ./cmd/jiboia-relay/main.go
@@ -95,141 +95,148 @@ go run ./cmd/jiboia-server/main.go
 go run ./cmd/jiboia-client/main.go --name jiboia --local http://localhost:3000
 ```
 
-Abra no navegador:
+Open in browser:
 ```
 http://jiboia.jiboia.local
 ```
 
-Adicione ao seu `/etc/hosts`:
+Add to your `/etc/hosts`:
 ```
 127.0.0.1 jiboia.jiboia.local
 ```
 
 ---
 
-## 🛠 Buildando os binários
+## 🛠 Building binaries
 ```bash
-# Build todos manualmente
+# Manual build
 GOOS=linux GOARCH=amd64 go build -o jiboia-relay ./cmd/jiboia-relay
 GOOS=linux GOARCH=amd64 go build -o jiboia-client ./cmd/jiboia-client
 GOOS=linux GOARCH=amd64 go build -o jiboia-server ./cmd/jiboia-server
 ```
-Ou com `goreleaser`, definindo múltiplos builds por binário.
+Or use `goreleaser` to define multiple builds per binary.
 
 ---
 
-## 🧱 Como funciona a aplicação
-- **relay:** recebe requisições HTTP, extrai subdomínio, redireciona via WebSocket para um cliente conectado.
-- **client:** escuta mensagens WebSocket e atua como proxy reverso para um servidor local.
-- **server:** mock de aplicação para teste da cadeia de tunelamento.
+## 📦 Terminal Installation (Linux/macOS/Windows)
+
+### curl (Linux/macOS)
+```bash
+curl -s https://raw.githubusercontent.com/valcinei/jiboia-tunnel/main/install.sh | bash
+```
+
+### PowerShell (Windows)
+```powershell
+iwr https://raw.githubusercontent.com/valcinei/jiboia-tunnel/main/install.ps1 -useb | iex
+```
+
+The script detects your platform, downloads the latest binaries, and places them in:
+- Linux/macOS: `/usr/local/bin`
+- Windows: `%ProgramFiles%\JiboiaTunnel\`
 
 ---
 
-## ✅ Etapas restantes para persistência e autenticação
-
-### 🔐 Autenticação com JWT
-1. Criar middleware `RequireAuth()` para proteger rotas (`/tunnels`, etc).
-2. Aplicar o middleware às rotas REST no `jiboia-server`.
-3. Adicionar validação do token JWT recebido via cookie ou `Authorization: Bearer`.
-4. Criar endpoint opcional para `logout` (invalidar cookie).
-5. (futuro) Criar rota `/users` com persistência de usuários.
-
-### 💾 Persistência real em SQLite
-1. Criar função `Migrate()` que execute `CREATE TABLE IF NOT EXISTS tunnels (...)`.
-2. Criar tipo `SQLiteStore` que implemente a interface `TunnelStore`.
-3. Substituir o uso de `InMemoryStore` por `SQLiteStore`.
-4. Adicionar verificação de erro ao abrir o banco (permissão, caminho, etc).
-
-### 🔑 Token no client
-1. Adicionar suporte à flag `--authtoken` no `jiboia-client`.
-2. Incluir token no header `Authorization: Bearer` ao fazer chamadas à API.
-3. Validar token no `relay` para permitir ou negar conexão do túnel.
+## 🧱 How the application works
+- **relay:** receives HTTP requests, extracts subdomain, redirects via WebSocket to the connected client.
+- **client:** listens to WebSocket messages and acts as a reverse proxy to the local server.
+- **server:** mock app to test the tunneling chain.
 
 ---
 
-## 🌐 Suporte a domínios personalizados pelos usuários
+## ✅ Remaining steps for persistence and authentication
 
-### Objetivo
-Permitir que o usuário, autenticado na plataforma, possa registrar e usar domínios personalizados para seus túneis.
-Permitir que o usuário utilize seu **próprio domínio customizado** em vez de um subdomínio `.jiboia.local` ou `.jiboia.io`.
+### 🔐 JWT Authentication
+1. Create middleware `RequireAuth()` to protect routes (`/tunnels`, etc).
+2. Apply middleware to REST routes in `jiboia-server`.
+3. Add JWT token validation via cookie or `Authorization: Bearer`.
+4. Create optional `logout` endpoint.
+5. (future) Add `/users` route with user persistence.
 
-### Etapas para suporte completo
+### 💾 Real SQLite persistence
+1. Create `Migrate()` function to run `CREATE TABLE IF NOT EXISTS tunnels (...)`.
+2. Create `SQLiteStore` type implementing the `TunnelStore` interface.
+3. Replace `InMemoryStore` with `SQLiteStore`.
+4. Add error handling for opening database (path, permissions).
 
-7. **Cadastro do domínio pelo usuário (por usuário autenticado):**
-   - Criar endpoint `POST /domains` na API do `jiboia-server`.
-   - O domínio será vinculado ao túnel **e ao usuário autenticado**.
-   - Evita conflito entre domínios e reforça segurança multiusuário.
-   - Exemplo payload:
+### 🔑 Client token support
+1. Add `--authtoken` support to `jiboia-client`.
+2. Include token in the `Authorization` header for API calls.
+3. Validate token in `relay` to allow/deny tunnel connection.
+
+---
+
+## 🌐 Support for custom user domains
+
+### Goal
+Allow authenticated users to register and use custom domains for their tunnels.
+
+### Implementation steps
+
+7. **Domain registration by the user:**
+   - Create `POST /domains` endpoint in `jiboia-server`.
+   - Associate the domain with the tunnel and authenticated user.
+   - Example payload:
      ```json
-     { "hostname": "meusite.com" }
+     { "hostname": "mydomain.com" }
      ```
-   - Futuramente, exigir verificação via DNS TXT para validar propriedade.
-   - Criar endpoint `POST /domains` na API do `jiboia-server`.
-   - O domínio será vinculado ao túnel do usuário autenticado.
-   - Pode-se futuramente exigir verificação via DNS TXT.
+   - Optionally require DNS TXT verification in the future.
 
-8. **Validação no relay:**
-   - O `relay` deve aceitar conexões por domínio customizado (não só subdomínios).
-   - Verificar se o domínio existe no banco e está associado a um túnel ativo.
+8. **Relay validation:**
+   - Accept full domain requests in `Host:` header, not just subdomains.
+   - Check if domain exists in database and is linked to an active tunnel.
 
+9. **Client flags:**
+   - `--hostname` to support external domains.
 
-1. **Adicionar flag no client:**
-   - `--hostname` para permitir domínios como `meusite.com`.
-   
-2. **Salvar esse domínio no backend (server):**
-   - Associar `hostname` ao túnel no banco de dados.
+10. **Save in backend:**
+    - Link domain to tunnel in the database.
 
-3. **Relay deve identificar requisições por hostname**:
-   - Hoje ele só usa subdomínio (`meuapp.jiboia.io`).
-   - Deve também aceitar `Host: meusite.com` e rotear para o túnel correto.
+11. **DNS setup:**
+    - User should point domain to relay IP (A or CNAME record).
 
-4. **Usuário deve apontar DNS para o IP do relay**:
-   - Exemplo: `A meusite.com → 192.0.2.1`
+12. **HTTPS/TLS (future):**
+    - Support via Let's Encrypt or Nginx/Caddy config.
 
-5. **TLS/HTTPS para domínios customizados (futuro)**:
-   - Integração com Let's Encrypt ou configuração manual com Caddy/Nginx.
-
-6. **Validação de domínio (futuro)**:
-   - API `/verify-domain` que gera um token e valida via CNAME ou TXT record.
+13. **DNS validation (future):**
+    - `/verify-domain` endpoint for token-based DNS validation.
 
 ---
 
-## 🤝 Contribuindo com o projeto
+## 🤝 Contributing
 
-Contribuições são bem-vindas! Você pode:
+Contributions are welcome! You can:
+- Open issues with ideas, bugs, or improvements
+- Submit pull requests
+- Join discussions
 
-- Criar issues com sugestões, bugs ou melhorias
-- Abrir pull requests com correções ou novos recursos
-- Discutir ideias na aba de Discussões (se disponível)
-
-### Como começar
-1. Faça um fork do repositório
-2. Clone o fork localmente
-3. Crie uma branch:
+### Getting started
+1. Fork the repository
+2. Clone your fork locally
+3. Create a branch:
    ```bash
-   git checkout -b minha-feature
+   git checkout -b my-feature
    ```
-4. Faça suas alterações e commite:
+4. Make changes and commit:
    ```bash
-   git commit -m "feat: adiciona suporte a hostname personalizado"
+   git commit -m "feat: add custom hostname support"
    ```
-5. Envie para seu fork:
+5. Push to your fork:
    ```bash
-   git push origin minha-feature
+   git push origin my-feature
    ```
-6. Abra um pull request para o repositório principal
+6. Open a pull request to the main repository
 
-Consulte o [CONTRIBUTING.md](CONTRIBUTING.md) (caso disponível) para mais detalhes.
+See `CONTRIBUTING.md` for more details.
 
 ---
 
-## 🔮 Expansões futuras
-- Autenticação com token JWT
-- Suporte HTTPS com Let's Encrypt / Caddy
-- Dashboard web com painel dos túneis
-- REST API no `jiboia-server` para controle administrativo
-- Load balancing entre múltiplos relays
+## 🔮 Future improvements
+- JWT authentication
+- HTTPS via Let's Encrypt
+- Web dashboard
+- REST API in `jiboia-server` for administration
+- Load balancing between relays
 
 ---
 
-Essa separação por binários melhora o controle, facilita o deploy segmentado (ex: relay na nuvem, client em máquina local) e segue boas práticas de modularidade. Pronto para uso em produção ou extensão com novos recursos.
+This binary separation improves modularity, allows segmented deployment (e.g., relay in the cloud and client locally), and is ready for production use or future expansion.
