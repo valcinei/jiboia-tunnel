@@ -37,7 +37,7 @@ jobs:
           done
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: jiboia-binaries-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
