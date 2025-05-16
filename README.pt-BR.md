@@ -1,10 +1,10 @@
-# 📦 Jiboia Tunnel — Jiboia Tunnel — Structure and Usage
+# 📦 Jiboia Tunnel — Estrutura e Uso
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-🌍 This documentation is also available in:
-- [Português (Brasil)](README.pt-BR.md)
+🌍 Esta documentação também está disponível em:
 - [Español](README.es.md)
+- [English](README.md)
 
 O Jiboia Tunnel é uma ferramenta de tunelamento HTTP reverso baseada em WebSocket, inspirada em soluções como `ngrok` e `inlets`. A seguir está a documentação detalhada para desenvolvedores que desejam entender e replicar o projeto com precisão.
 
@@ -151,7 +151,6 @@ Ou com `goreleaser`, definindo múltiplos builds por binário.
 
 ### Objetivo
 Permitir que o usuário, autenticado na plataforma, possa registrar e usar domínios personalizados para seus túneis.
-Permitir que o usuário utilize seu **próprio domínio customizado** em vez de um subdomínio `.jiboia.local` ou `.jiboia.io`.
 
 ### Etapas para suporte completo
 
@@ -164,43 +163,34 @@ Permitir que o usuário utilize seu **próprio domínio customizado** em vez de 
      { "hostname": "meusite.com" }
      ```
    - Futuramente, exigir verificação via DNS TXT para validar propriedade.
-   - Criar endpoint `POST /domains` na API do `jiboia-server`.
-   - O domínio será vinculado ao túnel do usuário autenticado.
-   - Pode-se futuramente exigir verificação via DNS TXT.
 
 8. **Validação no relay:**
    - O `relay` deve aceitar conexões por domínio customizado (não só subdomínios).
    - Verificar se o domínio existe no banco e está associado a um túnel ativo.
 
+9. **Flags necessárias no client:**
+   - `--hostname` para permitir domínios externos.
 
-1. **Adicionar flag no client:**
-   - `--hostname` para permitir domínios como `meusite.com`.
-   
-2. **Salvar esse domínio no backend (server):**
-   - Associar `hostname` ao túnel no banco de dados.
+10. **Salvar no backend:**
+    - Associar domínio ao túnel na base de dados.
 
-3. **Relay deve identificar requisições por hostname**:
-   - Hoje ele só usa subdomínio (`meuapp.jiboia.io`).
-   - Deve também aceitar `Host: meusite.com` e rotear para o túnel correto.
+11. **Configuração DNS:**
+    - Usuário deve apontar o domínio para o IP do relay (registro A ou CNAME).
 
-4. **Usuário deve apontar DNS para o IP do relay**:
-   - Exemplo: `A meusite.com → 192.0.2.1`
+12. **HTTPS/TLS (futuro):**
+    - Suporte com Let's Encrypt ou configuração manual com Nginx/Caddy.
 
-5. **TLS/HTTPS para domínios customizados (futuro)**:
-   - Integração com Let's Encrypt ou configuração manual com Caddy/Nginx.
-
-6. **Validação de domínio (futuro)**:
-   - API `/verify-domain` que gera um token e valida via CNAME ou TXT record.
+13. **Validação DNS (futuro):**
+    - Endpoint `/verify-domain` para confirmar propriedade via token.
 
 ---
 
 ## 🤝 Contribuindo com o projeto
 
 Contribuições são bem-vindas! Você pode:
-
-- Criar issues com sugestões, bugs ou melhorias
-- Abrir pull requests com correções ou novos recursos
-- Discutir ideias na aba de Discussões (se disponível)
+- Criar issues com ideias, bugs ou melhorias
+- Enviar pull requests
+- Participar das discussões
 
 ### Como começar
 1. Faça um fork do repositório
@@ -209,7 +199,7 @@ Contribuições são bem-vindas! Você pode:
    ```bash
    git checkout -b minha-feature
    ```
-4. Faça suas alterações e commite:
+4. Faça alterações e commite:
    ```bash
    git commit -m "feat: adiciona suporte a hostname personalizado"
    ```
@@ -219,17 +209,17 @@ Contribuições são bem-vindas! Você pode:
    ```
 6. Abra um pull request para o repositório principal
 
-Consulte o [CONTRIBUTING.md](CONTRIBUTING.md) (caso disponível) para mais detalhes.
+Consulte [CONTRIBUTING.md](CONTRIBUTING.pt-BR.md)  para mais detalhes.
 
 ---
 
-## 🔮 Expansões futuras
-- Autenticação com token JWT
-- Suporte HTTPS com Let's Encrypt / Caddy
-- Dashboard web com painel dos túneis
-- REST API no `jiboia-server` para controle administrativo
-- Load balancing entre múltiplos relays
+## 🔮 Futuras melhorias
+- Autenticação com JWT
+- HTTPS com Let's Encrypt
+- Dashboard web de administração
+- API REST no `jiboia-server` para gestão
+- Balanceamento de carga entre relays
 
 ---
 
-Essa separação por binários melhora o controle, facilita o deploy segmentado (ex: relay na nuvem, client em máquina local) e segue boas práticas de modularidade. Pronto para uso em produção ou extensão com novos recursos.
+Essa separação por binários melhora a modularidade, facilita o deploy segmentado (ex: relay na nuvem e client local) e está pronta para produção ou expansão futura.
