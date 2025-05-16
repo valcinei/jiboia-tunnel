@@ -25,6 +25,7 @@ jobs:
             goarch: amd64
           - goos: darwin
             goarch: arm64
+
     steps:
       - uses: actions/checkout@v3
 
@@ -37,7 +38,12 @@ jobs:
         run: |
           mkdir -p dist
           for CMD in jiboia-client jiboia-relay jiboia-server; do
-            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/${CMD}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${CMD}
+            if [ "$CMD" = "jiboia-client" ]; then
+              BIN_NAME="jiboia"
+            else
+              BIN_NAME="$CMD"
+            fi
+            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/${BIN_NAME}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${CMD}
           done
 
       - name: Upload binaries
