@@ -44,6 +44,13 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		id = "default"
 	}
+
+	if _, exists := s.clients.Load(id); exists {
+		http.Error(w, "Subdomain already used", http.StatusConflict)
+		log.Printf("Try rejected: %%s already used", id)
+		return
+	}
+
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("upgrade error:", err)

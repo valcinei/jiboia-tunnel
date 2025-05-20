@@ -14,11 +14,11 @@ var DefaultRelayURL = func() string {
 	if val := os.Getenv("DEFAULT_RELAY_URL"); val != "" {
 		return val
 	}
-	return "ws://relay.jiboia.cloud/ws"
+	return "wss://relay.jiboia.cloud/ws"
 }()
 
 func main() {
-	var local, relay, name, proto, hostname, authtoken, config, region, label, logLevel string
+	var local, relay, name, proto, hostname, authtoken, config, region, label, logLevel, baseDomain string
 	var inspect bool
 
 	// Initialize the in-memory store
@@ -41,7 +41,14 @@ func main() {
 			// Add tunnel information to the in-memory store
 			store.AddTunnel(name, local, relay)
 
-			c := client.NewClient(local, relay, name)
+			if baseDomain == "" {
+				baseDomain = os.Getenv("TUNNEL_DOMAIN")
+				if baseDomain == "" {
+					baseDomain = "jiboia.cloud"
+				}
+			}
+
+			c := client.NewClient(local, relay, name, baseDomain)
 			if err := c.Start(); err != nil {
 				log.Fatal(err)
 			}
@@ -58,6 +65,7 @@ func main() {
 	cmd.Flags().StringVar(&region, "region", "", "Relay region (e.g., us, sa-east)")
 	cmd.Flags().StringVar(&label, "label", "", "Friendly tunnel identifier (used in logs/future API)")
 	cmd.Flags().StringVar(&logLevel, "log-level", "info", "Log level (debug, info, warn, error)")
+	cmd.Flags().StringVar(&baseDomain, "domain", "", "Base domain to generate tunnel URL (e.g., jiboia.cloud)")
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)

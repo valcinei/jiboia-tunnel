@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -16,16 +15,18 @@ import (
 )
 
 type Client struct {
-	localURL string
-	relayURL string
-	name     string
+	localURL   string
+	relayURL   string
+	name       string
+	baseDomain string
 }
 
-func NewClient(localURL, relayURL, name string) *Client {
+func NewClient(localURL, relayURL, name, baseDomain string) *Client {
 	return &Client{
-		localURL: localURL,
-		relayURL: relayURL,
-		name:     name,
+		localURL:   localURL,
+		relayURL:   relayURL,
+		name:       name,
+		baseDomain: baseDomain,
 	}
 }
 
@@ -36,30 +37,24 @@ func (c *Client) Start() error {
 	}
 	defer conn.Close()
 
-	u, err := url.Parse(c.relayURL)
-	if err != nil {
-		log.Printf("URL do relay inválida: %s", c.relayURL)
-	} else {
-		host := strings.Split(u.Host, ":")[0]
-		fmt.Printf("Túnel disponível em: http://%s.%s\n", c.name, host)
-	}
+	fmt.Printf("Túnel disponível em: http://%s.%s\n", c.name, c.baseDomain)
 
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Erro ao ler mensagem do relay:", err)
+			log.Println("Error to read message from relay:", err)
 			break
 		}
 
 		var tm shared.TunnelMessage
 		if err := json.Unmarshal(msg, &tm); err != nil {
-			log.Println("Erro ao decodificar mensagem:", err)
+			log.Println("Error to decode message:", err)
 			continue
 		}
 
 		req, err := http.NewRequest(tm.Method, c.localURL+tm.Path, bytes.NewReader(tm.Body))
 		if err != nil {
-			log.Println("Erro ao criar requisição local:", err)
+			log.Println("Error to create local request:", err)
 			continue
 		}
 
@@ -67,11 +62,11 @@ func (c *Client) Start() error {
 		var response shared.TunnelResponse
 
 		if err != nil {
-			log.Println("Erro ao enviar para o serviço local:", err)
+			log.Println("Error sending to local service:", err)
 			response = shared.TunnelResponse{
 				StatusCode: 502,
 				Headers:    map[string]string{"Content-Type": "text/plain"},
-				Body:       []byte("Erro ao conectar ao serviço local"),
+				Body:       []byte("Error connecting to local service"),
 			}
 		} else {
 			defer resp.Body.Close()
@@ -95,12 +90,12 @@ func (c *Client) Start() error {
 
 		jsonResp, err := json.Marshal(response)
 		if err != nil {
-			log.Println("Erro ao serializar resposta:", err)
+			log.Println("Error serializing response:", err)
 			continue
 		}
 
 		if err := conn.WriteMessage(websocket.BinaryMessage, jsonResp); err != nil {
-			log.Println("Erro ao enviar resposta ao relay:", err)
+			log.Println("Error sending response to relay:", err)
 		} else {
 			log.Printf("Responsed: %s %s → %d", tm.Method, tm.Path, response.StatusCode)
 		}
