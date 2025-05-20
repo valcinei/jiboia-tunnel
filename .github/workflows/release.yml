@@ -30,3 +30,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_RELAY_URL: ${{ secrets.DEFAULT_RELAY_URL || 'ws://relay.jiboia.cloud/ws' }}

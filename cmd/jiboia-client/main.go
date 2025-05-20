@@ -10,6 +10,13 @@ import (
 	"github.com/valcinei/jiboia-tunnel/shared"
 )
 
+var DefaultRelayURL = func() string {
+	if val := os.Getenv("DEFAULT_RELAY_URL"); val != "" {
+		return val
+	}
+	return "ws://relay.jiboia.cloud/ws"
+}()
+
 func main() {
 	var local, relay, name, proto, hostname, authtoken, config, region, label, logLevel string
 	var inspect bool
@@ -40,7 +47,8 @@ func main() {
 			}
 		},
 	}
-	cmd.Flags().StringVar(&relay, "relay", "ws://localhost:80/ws", "Relay URL")
+
+	cmd.Flags().StringVar(&relay, "relay", DefaultRelayURL, "Relay URL")
 	cmd.Flags().StringVar(&name, "name", "", "Tunnel name (subdomain)")
 	cmd.Flags().StringVar(&proto, "proto", "http", "Protocol to expose (http, tcp)")
 	cmd.Flags().StringVar(&hostname, "hostname", "", "Full custom domain (e.g., mywebsite.com)")

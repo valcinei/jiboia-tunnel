@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -35,7 +36,13 @@ func (c *Client) Start() error {
 	}
 	defer conn.Close()
 
-	fmt.Printf("Túnel disponível em: http://%s.jiboia.local:80\n", c.name)
+	u, err := url.Parse(c.relayURL)
+	if err != nil {
+		log.Printf("URL do relay inválida: %s", c.relayURL)
+	} else {
+		host := strings.Split(u.Host, ":")[0]
+		fmt.Printf("Túnel disponível em: http://%s.%s\n", c.name, host)
+	}
 
 	for {
 		_, msg, err := conn.ReadMessage()
