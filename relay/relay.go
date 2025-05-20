@@ -45,25 +45,37 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		id = "default"
 	}
 
+	// Check if the subdomain is already in use
 	if _, exists := s.clients.Load(id); exists {
-		http.Error(w, "Subdomain already used", http.StatusConflict)
-		log.Printf("Try rejected: %%s already used", id)
+		http.Error(w, "Subdomínio já está em uso", http.StatusConflict)
+		log.Printf("Conexão rejeitada: %s já está em uso", id)
 		return
 	}
 
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("upgrade error:", err)
+		log.Println("WebSocket upgrade error:", err)
 		return
 	}
-	log.Printf("New client: %s", id)
-	s.clients.Store(id, &ClientConn{Conn: conn})
+
+	// Armazena o client
+	client := &ClientConn{Conn: conn}
+	s.clients.Store(id, client)
+	log.Printf("New client connected: %s", id)
+
+	// Remove ao desconectar
 	defer func() {
 		s.clients.Delete(id)
 		conn.Close()
-		log.Printf("Client %s disconnected", id)
+		log.Printf("Client disconnected: %s (subdomain released)", id)
 	}()
-	select {}
+
+	// Keep the connection active (there could be ping-pong here in the future)
+	for {
+		if _, _, err := conn.NextReader(); err != nil {
+			break
+		}
+	}
 }
 
 func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {

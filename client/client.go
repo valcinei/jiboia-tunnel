@@ -31,13 +31,16 @@ func NewClient(localURL, relayURL, name, baseDomain string) *Client {
 }
 
 func (c *Client) Start() error {
-	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("%s?id=%s", c.relayURL, c.name), nil)
+	conn, resp, err := websocket.DefaultDialer.Dial(fmt.Sprintf("%s?id=%s", c.relayURL, c.name), nil)
 	if err != nil {
-		return fmt.Errorf("falha ao conectar ao relay: %w", err)
+		if resp != nil && resp.StatusCode == http.StatusConflict {
+			return fmt.Errorf("subdomain '%s' is already in use. Choose another one with --name", c.name)
+		}
+		return fmt.Errorf("failed to connect to relay: %w", err)
 	}
 	defer conn.Close()
 
-	fmt.Printf("Túnel disponível em: http://%s.%s\n", c.name, c.baseDomain)
+	fmt.Printf("Tunnel available at: http://%s.%s\n", c.name, c.baseDomain)
 
 	for {
 		_, msg, err := conn.ReadMessage()
