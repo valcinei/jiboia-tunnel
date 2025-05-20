@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/valcinei/jiboia-tunnel/shared"
@@ -45,7 +46,6 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		id = "default"
 	}
 
-	// Check if the subdomain is already in use
 	if _, exists := s.clients.Load(id); exists {
 		http.Error(w, "Subdomain is already in use", http.StatusConflict)
 		log.Printf("Connection rejected: %s is already in use", id)
@@ -58,23 +58,34 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store client
 	client := &ClientConn{Conn: conn}
 	s.clients.Store(id, client)
 	log.Printf("New client connected: %s", id)
 
-	// Clean up on disconnect
 	defer func() {
 		s.clients.Delete(id)
 		conn.Close()
 		log.Printf("Client disconnected: %s (subdomain released)", id)
 	}()
 
-	// Loop to detect disconnection
+	// Setup ping/pong to detect dead connections sem leitura explícita
+	conn.SetReadLimit(512)
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
 	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
+		err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second))
+		if err != nil {
+			log.Printf("Ping failed to %s: %v", id, err)
 			break
 		}
+		time.Sleep(30 * time.Second)
 	}
 }
 
