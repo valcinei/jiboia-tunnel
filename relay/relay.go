@@ -58,20 +58,24 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Armazena o client
+	// Store client
 	client := &ClientConn{Conn: conn}
 	s.clients.Store(id, client)
 	log.Printf("New client connected: %s", id)
 
-	// Remove ao desconectar
+	// Clean up on disconnect
 	defer func() {
 		s.clients.Delete(id)
 		conn.Close()
 		log.Printf("Client disconnected: %s (subdomain released)", id)
 	}()
 
-	select {}
-
+	// Loop to detect disconnection
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			break
+		}
+	}
 }
 
 func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
