@@ -1,8 +1,6 @@
   services:
     jiboia-relay:
-      build:
-        context: .
-        dockerfile: Dockerfile
+      image: jiboia-relay:latest
       ports:
         - "8080:80"
       restart: unless-stopped

@@ -33,7 +33,7 @@ jobs:
           DEFAULT_RELAY_URL: ${{ secrets.DEFAULT_RELAY_URL }}
 
   docker:
-    name: Build and Push Docker Image for Relay
+    name: Build and Push Docker Images (Relay and Server)
     runs-on: ubuntu-latest
 
     steps:
@@ -48,11 +48,17 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Docker Images
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          IMAGE_NAME=jiboia-relay
           VERSION=${GITHUB_REF#refs/tags/}
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$VERSION -t ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$VERSION
-          docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:latest
+
+          # Relay
+          docker build -f Dockerfile.relay -t ${{ secrets.DOCKER_USERNAME }}/jiboia-relay:$VERSION -t ${{ secrets.DOCKER_USERNAME }}/jiboia-relay:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/jiboia-relay:$VERSION
+          docker push ${{ secrets.DOCKER_USERNAME }}/jiboia-relay:latest
+
+          # Server
+          docker build -f Dockerfile.server -t ${{ secrets.DOCKER_USERNAME }}/jiboia-server:$VERSION -t ${{ secrets.DOCKER_USERNAME }}/jiboia-server:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/jiboia-server:$VERSION
+          docker push ${{ secrets.DOCKER_USERNAME }}/jiboia-server:latest

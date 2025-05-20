@@ -1,0 +1,9 @@
+FROM golang:1.21-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o jiboia-server ./cmd/jiboia-server
+
+FROM alpine:latest
+COPY --from=builder /app/jiboia-server /usr/bin/jiboia-server
+ENTRYPOINT ["jiboia-server"]
+CMD ["--addr", ":3000"]
