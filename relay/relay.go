@@ -47,8 +47,8 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the subdomain is already in use
 	if _, exists := s.clients.Load(id); exists {
-		http.Error(w, "Subdomínio já está em uso", http.StatusConflict)
-		log.Printf("Conexão rejeitada: %s já está em uso", id)
+		http.Error(w, "Subdomain is already in use", http.StatusConflict)
+		log.Printf("Connection rejected: %s is already in use", id)
 		return
 	}
 
@@ -70,12 +70,8 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Client disconnected: %s (subdomain released)", id)
 	}()
 
-	// Keep the connection active (there could be ping-pong here in the future)
-	for {
-		if _, _, err := conn.NextReader(); err != nil {
-			break
-		}
-	}
+	select {}
+
 }
 
 func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
