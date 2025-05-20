@@ -1,14 +1,11 @@
   services:
     jiboia-relay:
-      image: jiboia-relay:latest
+      image: valcinei/jiboia-relay:latest
       ports:
         - "8080:80"
       restart: unless-stopped
 
     jiboia-server:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      command: ["server"]
+      image: valcinei/jiboia-server:latest
       ports:
         - "3001:3000"
